@@ -162,7 +162,12 @@ Her gün sonunda 2-3 satır not. Sunum hazırlığında bu bölüm işini çok k
 ### Gün 1 — 21.08.2026
 HTML iskeletini kurdum ve tablo yapısını yazdım. CSS ile tabloya basit stil verdim. sonrasında tabloya örnek uçuş verilerini ekledim. 
 
+### Gün 2 — 24.08.2026
+CSS değişkenleriyle renk sistemi kurdum, header'ı Flexbox ile hizaladım, section'ları kart görünümüne getirdim ve durum renklerini ekledim.
+
 ---
+
+
 
 ## Lisans
 

@@ -1,5 +1,60 @@
+:root {
+    --renk-ana: #0d6efd;
+    --renk-arkaplan: #f4f6f8;
+    --renk-basarili: #198754;
+    --renk-uyari: #ffc107;
+    --renk-iptal: #dc3545;
+    --renk-notr: #6c757d;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--renk-arkaplan);
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: var(--renk-ana);
+    color: white;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+section {
+    background-color: white;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow:  0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.durum-basarili {
+    color: var(--renk-basarili);
+    font-weight: bold;
+}
+.durum-iptal {
+    color: var(--renk-iptal);
+    font-weight: bold;
+}
+
+.durum-notr {
+    color: var(--renk-notr);
+    font-weight: bold;
+}
+
+.durum-uyari {
+    color: var(--renk-uyari);
+    font-weight: bold;
+}
+
+
 table {
     border-collapse: collapse;
+    
 }
 
 th, td {
