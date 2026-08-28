@@ -1,0 +1,45 @@
+:root {
+    --ekran-zemin: #0e2a44;
+    --ekran-baslik-zemin: #b91c1c;
+    --ekran-baslik-metin: #e5e7eb;
+    --ekran-basarili: #22c55e;
+    --ekran-uyari: #facc15;
+    --ekran-iptal: #f87171;
+    --ekran-notr: #94a3b8;
+}
+
+body {
+    background-color: var(--ekran-zemin);
+    color: var(--ekran-baslik-metin);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+table {
+    font-size: 2vh;
+    font-weight: bold; 
+    line-height: 1.8;  
+    border-collapse: collapse; width: 100%;
+
+}
+
+th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid var(--ekran-notr);
+    
+}
+.durum-basarili {
+    color: var(--ekran-basarili);
+}
+.durum-uyari {
+    color: var(--ekran-uyari);
+}
+.durum-iptal {
+    color: var(--ekran-iptal);
+}
+.durum-notr {
+    color: var(--ekran-notr);
+}
+
+h1 {
+    font-size: 4vh;
+}

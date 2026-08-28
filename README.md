@@ -194,6 +194,13 @@ CSS değişkenleriyle renk sistemi kurdum, header'ı Flexbox ile hizaladım, sec
 
 ### Gün 3 — 25.08.2026
 Uçuş verisini array içine taşıdım, tabloyu artık forEach ile diziden üretiyorum. Template literal (backtick) ile HTML satırı oluşturmayı öğrendim, durum bilgisine göre CSS class döndüren durumSinifi() fonksiyonunu yazdım.
+
+### Gün 4 — 27.08.2026
+ekran.html ve css/ekran.css dosyalarını ayırarak yayın ekranını panelden bağımsız hale getirdim, arama/istatistik bölümlerini çıkardım. Koyu tema için ayrı bir renk paleti kurdum, vh biriminin ekrana göre orantılı büyüdüğünü öğrendim ve kullandım.
+
+### Gün 5 — 28.08.2026
+
+
 ---
 
 ## Lisans
