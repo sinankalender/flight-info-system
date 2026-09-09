@@ -43,3 +43,72 @@ th, td {
 h1 {
     font-size: 4vh;
 }
+
+#tek-ucus {
+    padding: 3vh 4vw;
+    text-align: center;
+}
+
+#tek-ucus p,
+#tek-ucus h2 {
+    margin: 0;
+}
+
+#tek-havayolu {
+    font-size: 3vh;
+}
+
+#tek-ucus #tek-ucus-no {
+    margin-top: 1vh;
+    font-size: 9vh;
+    line-height: 1.1;
+}
+
+#tek-ucus #tek-sehir {
+    margin-top: 1vh;
+    font-size: 6vh;
+    font-weight: bold;
+}
+
+.tek-ucus-detaylar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2vw;
+    margin-top: 4vh;
+    padding: 2vh 0;
+    border-top: 1px solid var(--ekran-notr);
+    border-bottom: 1px solid var(--ekran-notr);
+}
+
+.tek-ucus-detaylar p {
+    font-size: 2.5vh;
+}
+
+.tek-ucus-detaylar span {
+    display: block;
+    margin-top: 1vh;
+    font-size: 5vh;
+    font-weight: bold;
+}
+
+#tek-ucus #tek-durum {
+    margin-top: 3vh;
+    font-size: 4vh;
+    font-weight: bold;
+}
+
+#gorsel-yayin {
+    padding: 2vh 4vw;
+    text-align: center;
+}
+
+#gorsel-baslik {
+    margin: 0 0 2vh;
+    font-size: 4vh;
+}
+
+#gorsel-resim {
+    width: 100%;
+    height: 58vh;
+    object-fit: contain;
+}

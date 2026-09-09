@@ -204,6 +204,11 @@ Panelde ekran kartı listesini kurdum. screens dizisini oluşturdum, CSS Grid il
 ### Gün 6
 Yayınları pages dizisinde tanımladım ve ekranlarla yayinId üzerinden ilişkilendirdim. Seçim değişince kartları yeniden çizdirdim; URL parametreleri ve filter ile yayın ekranında uygun uçuşları gösterdim. Fullscreen API ile düğmeden tam ekran açmayı ekledim.
 
+### Gün 7
+Tek uçuş yayınına ucusNo ekledim; find ile bulunan uçuşu büyük yazılarla gösterdim.
+Görsel yayınına başlık, resim yolu ve alternatif metin ekledim; yerel bir SVG duyuru görseli hazırladım.
+Yayın tipine göre ilgili alanı açıp diğerlerini gizledim; bulunamayan uçuş ve yüklenemeyen görsel için hata mesajı ekledim.
+
 ---
 
 

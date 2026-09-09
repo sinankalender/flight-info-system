@@ -30,12 +30,16 @@ const pages = [
   {
     id: 5,
     name: "Görsel / Duyuru",
-    tip: "gorsel"
+    tip: "gorsel",
+    baslik: "Esenboğa Havalimanı'na Hoş Geldiniz",
+    resimYolu: "images/hos-geldiniz.svg",
+    resimAciklama: "İyi yolculuklar. Uçuşunuzun güncel saat ve kapı bilgilerini uçuş ekranlarından takip edebilirsiniz."
   },
   {
     id: 6,
     name: "Uçuş Bilgisi",
-    tip: "tek-ucus"
+    tip: "tek-ucus",
+    ucusNo: "PC2657"
   }
 ];
 

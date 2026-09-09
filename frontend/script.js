@@ -36,6 +36,10 @@ const ucuslar = [
 
 const tbody = document.querySelector("tbody");
 const table = document.querySelector("table");
+const tekUcusAlani = document.querySelector("#tek-ucus");
+const gorselAlani = document.querySelector("#gorsel-yayin");
+const gorselBaslik = document.querySelector("#gorsel-baslik");
+const gorselResim = document.querySelector("#gorsel-resim");
 const baslik = document.querySelector("#yayin-baslik");
 const mesaj = document.querySelector("#ekran-mesaj");
 const tamEkranButton = document.querySelector("#tam-ekran");
@@ -69,6 +73,10 @@ function renderYayin() {
   mesaj.textContent = "";
   mesaj.hidden = true;
   table.hidden = true;
+  tekUcusAlani.hidden = true;
+  gorselAlani.hidden = true;
+  gorselResim.hidden = true;
+  gorselResim.removeAttribute("src");
 
   const screen = screens.find(function(screen) {
     return screen.id === screenId;
@@ -99,9 +107,46 @@ function renderYayin() {
   baslik.textContent = page.name;
   document.title = `${screen.name} — ${page.name}`;
 
-  // Tek uçuş ve görsel ekranları Gün 7'de hazırlanacak.
+  if (page.tip === "tek-ucus") {
+    const ucus = ucuslar.find(function(ucus) {
+      return ucus.ucusNo === page.ucusNo;
+    });
+
+    if (!ucus) {
+      mesajGoster("Bu yayına bağlı uçuş bulunamadı.");
+      return;
+    }
+
+    document.querySelector("#tek-havayolu").textContent = ucus.havayolu;
+    document.querySelector("#tek-ucus-no").textContent = ucus.ucusNo;
+    document.querySelector("#tek-sehir").textContent = ucus.sehir;
+    document.querySelector("#tek-planlanan").textContent = ucus.planlanan_saat;
+    document.querySelector("#tek-tahmini").textContent = ucus.tahmini_saat;
+    document.querySelector("#tek-kapi").textContent = ucus.kapi;
+
+    const durumAlani = document.querySelector("#tek-durum");
+    durumAlani.textContent = ucus.durum;
+    durumAlani.className = durumSinifi(ucus.durum);
+
+    tekUcusAlani.hidden = false;
+    return;
+  }
+
+  if (page.tip === "gorsel") {
+    if (!page.resimYolu) {
+      mesajGoster("Bu yayına bir görsel atanmamış.");
+      return;
+    }
+
+    gorselBaslik.textContent = page.baslik || page.name;
+    gorselResim.alt = page.resimAciklama || gorselBaslik.textContent;
+    gorselAlani.hidden = false;
+    gorselResim.src = page.resimYolu;
+    return;
+  }
+
   if (page.tip !== "liste") {
-    mesajGoster("Bu yayın tipinin görünümü Gün 7'de hazırlanacak.");
+    mesajGoster("Bu yayın tipi desteklenmiyor.");
     return;
   }
 
@@ -136,6 +181,19 @@ function renderYayin() {
     `;
   });
 }
+
+gorselResim.addEventListener("load", function() {
+  if (!gorselAlani.hidden) {
+    gorselResim.hidden = false;
+  }
+});
+
+gorselResim.addEventListener("error", function() {
+  if (!gorselAlani.hidden) {
+    gorselResim.hidden = true;
+    mesajGoster("Görsel yüklenemedi. Yayının resim yolunu kontrol et.");
+  }
+});
 
 tamEkranButton.addEventListener("click", async function() {
   try {
