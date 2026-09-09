@@ -127,15 +127,21 @@ airport-flight-system/
 
 ### Backend
 
-<!-- Gün 8'de doldurulacak:
-     - Python sürümü
-     - Sanal ortam oluşturma komutu
-     - Bağımlılıkların kurulumu
-     - Sunucuyu başlatma komutu
-     - Swagger arayüzünün adresi -->
+Python 3.13.5 ile geliştirildi.
 
-_Backend henüz geliştirilmedi._
+Projenin ana klasöründe sanal ortamı oluştur ve paketleri kur:
 
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+```
+
+Sunucuyu başlatmak için `baslat.bat` dosyasını çalıştır.
+
+- API: http://127.0.0.1:8000/
+- Swagger: http://127.0.0.1:8000/docs
+
+Sunucuyu durdurmak için terminalde Ctrl+C kullan.
 ---
 
 ## API Endpointleri
@@ -208,6 +214,11 @@ Yayınları pages dizisinde tanımladım ve ekranlarla yayinId üzerinden ilişk
 Tek uçuş yayınına ucusNo ekledim; find ile bulunan uçuşu büyük yazılarla gösterdim.
 Görsel yayınına başlık, resim yolu ve alternatif metin ekledim; yerel bir SVG duyuru görseli hazırladım.
 Yayın tipine göre ilgili alanı açıp diğerlerini gizledim; bulunamayan uçuş ve yüklenemeyen görsel için hata mesajı ekledim.
+
+### Gün 8
+Python sanal ortamını hazırladım, FastAPI ve Uvicorn kurdum.
+İlk GET endpointini yazdım; sunucu mesajını ve havalimanı bilgisini JSON olarak döndürdüm.
+Paket sürümlerini requirements.txt dosyasına kaydettim ve baslat.bat ile başlatmayı kolaylaştırdım.
 
 ---
 
