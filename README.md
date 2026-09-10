@@ -153,7 +153,10 @@ _API henüz geliştirilmedi._
 
 | Metot | Endpoint | Açıklama |
 |-------|----------|----------|
-| — | — | — |
+| GET | / | Sunucu mesajını ve havalimanı kodunu döndürür |
+| GET | /flights | Uçuş listesini döndürür |
+| GET | /screens | Ekran listesini döndürür |
+| GET | /pages | Yayın listesini döndürür |
 
 ---
 
@@ -192,19 +195,19 @@ Her gün sonunda 2-3 satır not.
 
 **Yazarken şunlara cevap ver:** Ne yaptım? Yeni ne öğrendim? Nerede takıldım, nasıl çözdüm?
 
-### Gün 1 — 21.08.2026
+### Gün 1 
 HTML iskeletini kurdum ve tablo yapısını yazdım. CSS ile tabloya basit stil verdim. sonrasında tabloya örnek uçuş verilerini ekledim.
 
-### Gün 2 — 24.08.2026
+### Gün 2 
 CSS değişkenleriyle renk sistemi kurdum, header'ı Flexbox ile hizaladım, section'ları kart görünümüne getirdim ve durum renklerini ekledim.
 
-### Gün 3 — 25.08.2026
+### Gün 3 
 Uçuş verisini array içine taşıdım, tabloyu artık forEach ile diziden üretiyorum. Template literal (backtick) ile HTML satırı oluşturmayı öğrendim, durum bilgisine göre CSS class döndüren durumSinifi() fonksiyonunu yazdım.
 
-### Gün 4 — 27.08.2026
+### Gün 4 
 ekran.html ve css/ekran.css dosyalarını ayırarak yayın ekranını panelden bağımsız hale getirdim, arama/istatistik bölümlerini çıkardım. Koyu tema için ayrı bir renk paleti kurdum, vh biriminin ekrana göre orantılı büyüdüğünü öğrendim ve kullandım.
 
-### Gün 5 — 28.08.2026
+### Gün 5 
 Panelde ekran kartı listesini kurdum. screens dizisini oluşturdum, CSS Grid ile 3 sütunlu kart düzeni yaptım, aspect-ratio ile kart oranlarını sabitledim. Durum göstergesi (online/offline) için statusClass() fonksiyonu yazdım, noktanın rengini kart durumuna göre değiştirdim.
 
 ### Gün 6
@@ -219,6 +222,11 @@ Yayın tipine göre ilgili alanı açıp diğerlerini gizledim; bulunamayan uçu
 Python sanal ortamını hazırladım, FastAPI ve Uvicorn kurdum.
 İlk GET endpointini yazdım; sunucu mesajını ve havalimanı bilgisini JSON olarak döndürdüm.
 Paket sürümlerini requirements.txt dosyasına kaydettim ve baslat.bat ile başlatmayı kolaylaştırdım.
+
+### Gün 9
+Uçuş, ekran ve yayın verilerini Python listelerine taşıdım.
+Pydantic modelleriyle yanıt alanlarını tanımladım; yayınlar için isteğe bağlı alanlar kullandım.
+GET /flights, /screens ve /pages endpointlerini ekledim.
 
 ---
 
