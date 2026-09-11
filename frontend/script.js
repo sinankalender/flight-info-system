@@ -1,38 +1,6 @@
-const ucuslar = [
-  {
-    ucusNo: "TK2241",
-    havayolu: "THY",
-    yon: "departure",
-    hatTipi: "domestic",
-    sehir: "Ankara",
-    planlanan_saat: "13:35",
-    tahmini_saat: "14:20",
-    kapi: "2",
-    durum: "Kalktı"
-  },
-  {
-    ucusNo: "PC2657",
-    havayolu: "PGT",
-    yon: "departure",
-    hatTipi: "domestic",
-    sehir: "İstanbul",
-    planlanan_saat: "17:35",
-    tahmini_saat: "18:00",
-    kapi: "5",
-    durum: "Planlandı"
-  },
-  {
-    ucusNo: "TK2351",
-    havayolu: "AJT",
-    yon: "departure",
-    hatTipi: "domestic",
-    sehir: "Antalya",
-    planlanan_saat: "16:30",
-    tahmini_saat: "17:00",
-    kapi: "3",
-    durum: "Gecikmeli"
-  }
-];
+let ucuslar = [];
+let pages = [];
+let screens = [];
 
 const tbody = document.querySelector("tbody");
 const table = document.querySelector("table");
@@ -210,4 +178,31 @@ document.addEventListener("fullscreenchange", function() {
   tamEkranButton.hidden = Boolean(document.fullscreenElement);
 });
 
-renderYayin();
+async function ekraniBaslat() {
+  table.hidden = true;
+  tekUcusAlani.hidden = true;
+  gorselAlani.hidden = true;
+
+  baslik.textContent = "Yayın yükleniyor...";
+  mesajGoster("Veriler alınıyor...");
+
+  try {
+    pages = await veriGetir("/pages");
+    screens = await veriGetir("/screens");
+    ucuslar = await veriGetir("/flights");
+
+    renderYayin();
+  } catch (error) {
+    table.hidden = true;
+    tekUcusAlani.hidden = true;
+    gorselAlani.hidden = true;
+    baslik.textContent = "Yayın yüklenemedi";
+    mesajGoster(
+      "Sunucudan veri alınamadı. Sunucunun çalıştığını kontrol edip sayfayı yenile."
+    );
+
+    console.error(error);
+  }
+}
+
+ekraniBaslat();

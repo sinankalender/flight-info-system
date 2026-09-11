@@ -1,3 +1,6 @@
+let pages = [];
+let screens = [];
+
 const container = document.querySelector("#screen-list");
 
 function statusClass(status) {
@@ -65,12 +68,10 @@ container.addEventListener("change", function(event) {
   screen.yayinId = yayinId;
   renderScreens();
 
-  // Yeniden çizimden sonra klavye odağını seçicide tut.
   document.querySelector(`#yayin-${screenId}`).focus();
 });
 
 container.addEventListener("click", function(event) {
-  // Seçici ve bağlantı kendi normal davranışını sürdürsün.
   if (event.target.closest("select, label, a")) {
     return;
   }
@@ -85,4 +86,20 @@ container.addEventListener("click", function(event) {
   window.open(link.href, "_blank", "noopener");
 });
 
-renderScreens();
+async function paneliBaslat() {
+  container.textContent = "Ekranlar yükleniyor...";
+
+  try {
+    pages = await veriGetir("/pages");
+    screens = await veriGetir("/screens");
+
+    renderScreens();
+  } catch (error) {
+    container.textContent =
+      "Ekran bilgileri alınamadı. Sunucunun çalıştığını kontrol edip sayfayı yenile.";
+
+    console.error(error);
+  }
+}
+
+paneliBaslat();

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
 
 class Ucus(BaseModel):
     ucusNo: str
@@ -35,7 +36,11 @@ class Yayin(BaseModel):
 
 app= FastAPI()
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5500"],
+    allow_methods=["GET"]
+)
 ucuslar = [
     {
         "ucusNo": "TK2241",

@@ -107,15 +107,24 @@ Proje gerçek kurum verisine bağımlı değildir. Tüm geliştirme, gerçekçi 
 ## Klasör yapısı
 
 ```text
-airport-flight-system/
+flight-info-system/
+├── backend/
+│   ├── main.py
+│   └── requirements.txt
 ├── frontend/
 │   ├── index.html
-│   └── style.css
+│   ├── ekran.html
+│   ├── api.js
+│   ├── app.js
+│   ├── script.js
+│   ├── css/
+│   │   ├── panel.css
+│   │   └── ekran.css
+│   └── images/
+│       └── hos-geldiniz.svg
+├── baslat.bat
 └── README.md
 ```
-
-<!-- Gün 4-5'te iki ayrı sayfaya ayrılacak: ekran.html ve panel.html
-     Yeni dosya eklediğin gün bu ağacı güncellemeyi alışkanlık haline getir. -->
 
 ---
 
@@ -123,7 +132,26 @@ airport-flight-system/
 
 ### Frontend
 
-`frontend/index.html` dosyasını tarayıcıda açmak yeterlidir.
+Önce aşağıdaki Backend bölümündeki kurulumu tamamla ve `baslat.bat` ile API'yi çalıştır.
+Ardından projenin ana klasöründe ikinci bir terminal aç:
+
+```powershell
+.\.venv\Scripts\python.exe -m http.server 5500 --bind 127.0.0.1 --directory frontend
+```
+
+- Panel: http://127.0.0.1:5500/index.html
+- Liste yayını: http://127.0.0.1:5500/ekran.html?id=1
+- Tek uçuş yayını: http://127.0.0.1:5500/ekran.html?id=6
+- Görsel yayını: http://127.0.0.1:5500/ekran.html?id=5
+
+İki sunucu da açık kalmalı. HTML dosyalarını HTTP adreslerinden aç.
+`5500` portu sayfaları, `8000` portu API verilerini sunar; backend'de `/index.html` adresi yoktur.
+CORS ayarı `http://127.0.0.1:5500` kaynağına izin verdiği için bu adresi kullan.
+
+Panelin kartları ve yayın ekranı verileri API'den alınır. Backend'e ulaşılamazsa açıklayıcı
+bir hata mesajı gösterilir; backend'i yeniden başlatıp sayfayı yenileyerek tekrar deneyebilirsin.
+Yayın seçimi henüz backend'e kaydedilmez; panelden açılan ekranın URL'sine aktarılır.
+Panel yenilenince başlangıç atamaları geri gelir. Açık yayın ekranının otomatik yenilenmesi Gün 15'te eklenecek.
 
 ### Backend
 
@@ -145,11 +173,6 @@ Sunucuyu durdurmak için terminalde Ctrl+C kullan.
 ---
 
 ## API Endpointleri
-
-<!-- Gün 9'dan itibaren doldurulacak.
-     Her endpoint için: metot, yol, ne yaptığı, varsa parametreleri -->
-
-_API henüz geliştirilmedi._
 
 | Metot | Endpoint | Açıklama |
 |-------|----------|----------|
@@ -227,6 +250,11 @@ Paket sürümlerini requirements.txt dosyasına kaydettim ve baslat.bat ile baş
 Uçuş, ekran ve yayın verilerini Python listelerine taşıdım.
 Pydantic modelleriyle yanıt alanlarını tanımladım; yayınlar için isteğe bağlı alanlar kullandım.
 GET /flights, /screens ve /pages endpointlerini ekledim.
+
+### Gün 10
+Paneli ve yayın ekranını ortak api.js dosyasındaki fetch fonksiyonuyla backend'e bağladım.
+async/await ile verilerin gelmesini bekledim; HTTP hatalarını kontrol edip try/catch ile hata mesajları gösterdim.
+Frontend'deki sabit verileri kaldırdım, CORS ayarını ve iki sunucuyla çalıştırma adımlarını tamamladım.
 
 ---
 
