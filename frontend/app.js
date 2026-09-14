@@ -96,7 +96,7 @@ async function paneliBaslat() {
     renderScreens();
   } catch (error) {
     container.textContent =
-      "Ekran bilgileri alınamadı. Sunucunun çalıştığını kontrol edip sayfayı yenile.";
+      `Ekran bilgileri alınamadı. ${error.message}`;
 
     console.error(error);
   }

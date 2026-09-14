@@ -79,15 +79,15 @@ Tamamlandıkça işaretlenecek.
 **Yönetim paneli**
 - [ ] Ekran listesi ve durum göstergesi
 - [ ] Ekrana yayın atama
-- [ ] Uçuş listesi görüntüleme
-- [ ] Uçuş ekleme
-- [ ] Uçuş düzenleme
-- [ ] Uçuş silme
+- [x] Uçuş listesi görüntüleme
+- [x] Uçuş ekleme
+- [x] Uçuş düzenleme
+- [x] Uçuş silme
 
 **Altyapı**
 - [x] REST API ile veri sunumu
 - [x] Veritabanı entegrasyonu
-- [ ] Tam CRUD işlemleri
+- [x] Uçuşlar için tam CRUD işlemleri
 
 ### Uçuş durumları
 
@@ -123,12 +123,15 @@ flight-info-system/
 │   ├── ekran.html
 │   ├── api.js
 │   ├── app.js
+│   ├── flights.js
 │   ├── script.js
 │   ├── css/
 │   │   ├── panel.css
 │   │   └── ekran.css
 │   └── images/
 │       └── hos-geldiniz.svg
+├── tests/
+│   └── test_flights_api.py
 ├── baslat.bat
 └── README.md
 ```
@@ -224,7 +227,7 @@ yanıtların alan adları ve yayınlardaki boş alanları gizleme davranışı k
 | `database.py` | Engine, her bağlantıda foreign key kontrolü ve istek başına Session |
 | `models.py` | Tabloları Python sınıflarına eşleyen ORM modelleri ve ilişkiler |
 | `schemas.py` | API yanıt alanlarını belirleyen Pydantic modelleri |
-| `main.py` | Session üzerinden SELECT sorgularını çalıştıran endpointler |
+| `main.py` | Session üzerinden okuma ve yazma işlemlerini çalıştıran endpointler |
 
 Engine veritabanına bağlanmayı sağlar. Session bir isteğin veritabanı işlemlerini
 yürütür; `get_db` içindeki `yield` ile endpointe verilir ve istek bitince kapatılır.
@@ -241,8 +244,42 @@ sunucu terminaline hata ayrıntısı yazılır. İlk kurulumda `init_db.py` çal
 API başlarken otomatik örnek kayıt eklemez. `/` yalnızca sunucu mesajıdır,
 veritabanı bağlantısını kontrol etmek için `/flights` adresini kullan.
 
-Uçuş ekleme/düzenleme/silme Gün 13'te; panelden kalıcı yayın atama ve otomatik
-yenileme Gün 14'te tamamlanacak.
+### Panelden uçuş yönetimi (Gün 13)
+
+`index.html` sayfasında uçuş ekleme formu ve veritabanından yüklenen uçuş tablosu bulunur.
+`flights.js` bu formu ve tabloyu yönetir; `app.js` ekran kartlarını yönetmeye devam eder.
+
+- **Uçuş ekle:** Tüm alanları doldurup kaydet. Uçuş numarası büyük harfe çevrilir ve benzersiz olmalıdır.
+- **Düzenle:** Satırdaki düğme, uçuşu forma doldurur. Değişiklikleri kaydet veya **Vazgeç** ile düzenlemeyi bırak.
+- **Sil:** Onaydan sonra kayıt silinir. Bağlı tek uçuş yayını silinmez; yenilendiğinde uçuş bulunamadı mesajı gösterir.
+- **Listeyi yenile:** Başka bir yerde kaydedilen değişiklikleri alır. Yayın ekranları henüz elle yenilenir.
+
+API yanıtlarına sabit kayıt kimliği olan `id` eklendi. Düzenleme ve silme bu kimlikle yapılır;
+uçuş numarası değişirse bağlı yayındaki numara da foreign key kuralıyla güncellenir.
+`POST` yeni kayıt ekler, `PUT` uçuşun dokuz alanının tamamını günceller, `DELETE` kaydı siler.
+Başarılı yazma işlemleri `commit()` ile kalıcı kaydedilir; hata durumunda oturum geri alınır.
+
+Saatler `HH:MM` biçiminde olmalıdır. Boş alanlar, geçersiz yön/hat/durum ve uzunluk sınırını
+aşan metinler reddedilir. Aynı numara için `409`, bulunamayan kayıt için `404`, geçersiz
+girdi için `422` döner. Veritabanı kilidinde `503` ile DB Browser/SQLite bağlantılarını
+kapatmayı anlatan mesaj gösterilir. Kaydetme hatasında formdaki bilgiler korunur.
+
+Panelden yazmak için DB Browser açmak gerekmez. SQLite terminali veya DB Browser'da
+bekleyen işlem bırakma; kaydetme başarılı olduktan sonra bağlantıyı kapat.
+Panelden kalıcı yayın atama ve otomatik yenileme Gün 14'te tamamlanacak.
+
+### Gün 13 testleri
+
+Otomatik API testleri her test için ayrı geçici veritabanı oluşturur; kendi kayıtlarına dokunmaz:
+
+```powershell
+.\.venv\Scripts\python.exe -B -m unittest discover -s tests -v
+```
+
+Elle denemek için panelden benzersiz numaralı bir deneme uçuşu ekle; sayfayı yenileyip
+kaydın kaldığını gör. Kapısını düzenle, yeniden yenile, ardından deneme uçuşunu sil.
+Aynı numarayla ikinci uçuş eklemeyi ve düzenlerken **Vazgeç** düğmesini de dene.
+Gidiş/iç hat seçtiysen liste yayınını (`ekran.html?id=1`) yenileyerek sonucu görebilirsin.
 
 ---
 
@@ -252,6 +289,10 @@ yenileme Gün 14'te tamamlanacak.
 |-------|----------|----------|
 | GET | / | Sunucu mesajını ve havalimanı kodunu döndürür |
 | GET | /flights | Uçuş listesini döndürür |
+| GET | /flights/{ucus_id} | Tek uçuşu kayıt kimliğiyle getirir |
+| POST | /flights | Uçuş ekler; 201 döndürür |
+| PUT | /flights/{ucus_id} | Uçuşun tüm alanlarını günceller |
+| DELETE | /flights/{ucus_id} | Uçuşu siler; gövdesiz 204 döndürür |
 | GET | /screens | Ekran listesini döndürür |
 | GET | /pages | Yayın listesini döndürür |
 
@@ -339,6 +380,11 @@ Tekrarlanabilir veritabanı kurulum komutunu hazırladım; kayıtların korunmas
 SQLAlchemy engine ve istek başına Session ile API'yi mevcut SQLite veritabanına bağladım.
 ORM tablo modellerini ve Pydantic yanıt şemalarını ayırdım; üç GET endpointindeki sabit listeleri SELECT sorgularıyla değiştirdim.
 Yanıt uyumluluğunu, kayıt değişikliklerinin yeni isteklere yansımasını ve veritabanı hata durumunu kontrol ettim.
+
+### Gün 13
+Uçuş ekleme, düzenleme ve silme endpointlerini; panelde form, uçuş tablosu ve silme onayını ekledim.
+Girdi doğrulamasını, benzersiz uçuş numarasını, hata mesajlarını ve commit/rollback ile kalıcı kayıt işlemlerini öğrendim.
+Geçici veritabanında CRUD, bağlı yayınlar ve kilit hatasını test ettim; panelde girilen metinleri güvenli biçimde gösterdim.
 
 ---
 

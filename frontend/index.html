@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Flight Information System</title>
-    <link rel="stylesheet" href="css/panel.css">
+    <link rel="stylesheet" href="css/panel.css?v=13.1">
 </head>
 <body>
     <header>
@@ -12,34 +12,79 @@
         <time datetime=""></time>Saat: 15:35</b> 
     </header>
     <main>
-        <section>
-            <p>Havalimanı/Arama/Filtreler</p>
-
+        <section aria-labelledby="ucus-form-baslik">
+            <h2 id="ucus-form-baslik">Uçuş ekle</h2>
+            <form id="ucus-form">
+                <fieldset id="ucus-form-alanlari">
+                    <legend class="sr-only">Uçuş bilgileri</legend>
+                    <div class="form-grid">
+                        <label>Uçuş no
+                            <input name="ucusNo" required minlength="2" maxlength="12" pattern="[A-Za-z0-9]+" placeholder="Örn. TK1234">
+                        </label>
+                        <label>Havayolu
+                            <input name="havayolu" required maxlength="60" placeholder="Örn. THY">
+                        </label>
+                        <label>Şehir
+                            <input name="sehir" required maxlength="80" placeholder="Örn. İzmir">
+                        </label>
+                        <label>Yön
+                            <select name="yon"><option value="departure">Gidiş</option><option value="arrival">Geliş</option></select>
+                        </label>
+                        <label>Hat tipi
+                            <select name="hatTipi"><option value="domestic">İç hat</option><option value="international">Dış hat</option></select>
+                        </label>
+                        <label>Planlanan saat
+                            <input name="planlanan_saat" type="time" required step="60">
+                        </label>
+                        <label>Tahmini saat
+                            <input name="tahmini_saat" type="time" required step="60">
+                        </label>
+                        <label>Kapı
+                            <input name="kapi" required maxlength="12" placeholder="Örn. 9">
+                        </label>
+                        <label>Durum
+                            <select name="durum">
+                                <option>Planlandı</option><option>Kontuar Açık</option><option>Kapı Kapandı</option>
+                                <option>Gecikmeli</option><option>İndi</option><option>Kalktı</option><option>İptal Edildi</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="form-actions">
+                        <button id="ucus-kaydet" type="submit">Uçuş ekle</button>
+                        <button id="ucus-vazgec" class="secondary" type="button" hidden>Vazgeç</button>
+                    </div>
+                </fieldset>
+            </form>
+            <p id="ucus-islem-mesaji" role="status" hidden></p>
         </section>
-        <section>
-            <p>İstatistikler</p>
-
-        </section>
-        <section>
-            <p>Uçuşlar</p>
-
+        <section aria-labelledby="ucus-liste-baslik">
+            <div class="section-heading">
+                <h2 id="ucus-liste-baslik">Uçuşlar</h2>
+                <button id="ucus-yenile" type="button" class="secondary">Listeyi yenile</button>
+            </div>
+            <p id="ucus-liste-mesaji" role="status">Uçuşlar yükleniyor...</p>
+            <div class="table-scroll">
             <table>
                 <thead>
                     <tr>
                         <th>Havayolu</th>
                         <th>Uçuş No</th>
                         <th>Şehir</th>
+                        <th>Yön</th>
+                        <th>Hat</th>
                         <th>Planlanan Saat</th>
                         <th>Tahmini Saat</th>
                         <th>Kapı</th>
                         <th>Durum</th>
+                        <th>İşlemler</th>
                     </tr>
                 </thead>
 
-                <tbody>
+                <tbody id="ucus-listesi">
 
                 </tbody>
             </table>
+            </div>
         </section>
 
 
@@ -48,7 +93,8 @@
         </section>
         
     </main>
-    <script src="api.js"></script>
-    <script src="app.js"></script>
+    <script src="api.js?v=13.1"></script>
+    <script src="app.js?v=13.1"></script>
+    <script src="flights.js?v=13.1"></script>
 </body>
 </html>

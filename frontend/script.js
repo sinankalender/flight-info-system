@@ -24,7 +24,7 @@ function durumSinifi(durum) {
     return "durum-notr";
   } else if (durum === "Gecikmeli") {
     return "durum-uyari";
-  } else if (durum === "İptal") {
+  } else if (durum === "İptal" || durum === "İptal Edildi") {
     return "durum-iptal";
   } else {
     return "durum-notr";
@@ -134,19 +134,15 @@ function renderYayin() {
   }
 
   filtreliUcuslar.forEach(function(ucus) {
-    tbody.innerHTML += `
-      <tr>
-        <td>${ucus.havayolu}</td>
-        <td>${ucus.ucusNo}</td>
-        <td>${ucus.sehir}</td>
-        <td>${ucus.planlanan_saat}</td>
-        <td>${ucus.tahmini_saat}</td>
-        <td>${ucus.kapi}</td>
-        <td class="${durumSinifi(ucus.durum)}">
-          ${ucus.durum}
-        </td>
-      </tr>
-    `;
+    const satir = document.createElement("tr");
+    const alanlar = ["havayolu", "ucusNo", "sehir", "planlanan_saat", "tahmini_saat", "kapi", "durum"];
+    alanlar.forEach(function(alan) {
+      const hucre = document.createElement("td");
+      hucre.textContent = ucus[alan];
+      if (alan === "durum") hucre.className = durumSinifi(ucus.durum);
+      satir.append(hucre);
+    });
+    tbody.append(satir);
   });
 }
 
@@ -198,7 +194,7 @@ async function ekraniBaslat() {
     gorselAlani.hidden = true;
     baslik.textContent = "Yayın yüklenemedi";
     mesajGoster(
-      "Sunucudan veri alınamadı. Sunucunun çalıştığını kontrol edip sayfayı yenile."
+      `Sunucudan veri alınamadı. ${error.message}`
     );
 
     console.error(error);
