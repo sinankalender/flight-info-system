@@ -85,8 +85,8 @@ Tamamlandıkça işaretlenecek.
 - [ ] Uçuş silme
 
 **Altyapı**
-- [ ] REST API ile veri sunumu
-- [ ] Veritabanı entegrasyonu
+- [x] REST API ile veri sunumu
+- [x] Veritabanı entegrasyonu
 - [ ] Tam CRUD işlemleri
 
 ### Uçuş durumları
@@ -110,6 +110,9 @@ Proje gerçek kurum verisine bağımlı değildir. Tüm geliştirme, gerçekçi 
 flight-info-system/
 ├── backend/
 │   ├── main.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
 │   ├── requirements.txt
 │   ├── schema.sql
 │   ├── seed.sql
@@ -166,6 +169,7 @@ Projenin ana klasöründe sanal ortamı oluştur ve paketleri kur:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
+.\.venv\Scripts\python.exe backend/init_db.py
 ```
 
 Sunucuyu başlatmak için `baslat.bat` dosyasını çalıştır.
@@ -209,8 +213,36 @@ başlatmadan önce `PRAGMA foreign_keys = ON;` çalıştırılmalıdır.
 `RELEASE` bu noktayı kaldırır. Alıştırmaları sonuna kadar çalıştırınca mevcut veriler korunur.
 Kalıcı yazma işlemlerinde transaction `COMMIT` ile tamamlanır; kurulum komutu bunu kendisi yapar.
 
-Gün 11'de veritabanı hazırlanmıştır; API hâlâ `main.py` içindeki Python listelerini okur.
-Veritabanında yapılan değişiklikler henüz tarayıcıya yansımaz. SQLAlchemy bağlantısı Gün 12'de eklenecek.
+### SQLAlchemy bağlantısı (Gün 12)
+
+API artık Python listeleri yerine `backend/flight_info.db` dosyasını okur.
+`GET /flights`, `/pages` ve `/screens` her istekte veritabanını sorgular;
+yanıtların alan adları ve yayınlardaki boş alanları gizleme davranışı korunur.
+
+| Dosya | Görevi |
+|-------|--------|
+| `database.py` | Engine, her bağlantıda foreign key kontrolü ve istek başına Session |
+| `models.py` | Tabloları Python sınıflarına eşleyen ORM modelleri ve ilişkiler |
+| `schemas.py` | API yanıt alanlarını belirleyen Pydantic modelleri |
+| `main.py` | Session üzerinden SELECT sorgularını çalıştıran endpointler |
+
+Engine veritabanına bağlanmayı sağlar. Session bir isteğin veritabanı işlemlerini
+yürütür; `get_db` içindeki `yield` ile endpointe verilir ve istek bitince kapatılır.
+ORM modeli tabloyu temsil eder; Pydantic modeli dışarıya dönen JSON'u tanımlar.
+`from_attributes=True`, Pydantic'in ORM nesnesindeki alanları okuyabilmesini sağlar.
+
+DB Browser'da bir uçuşun kapısını veya durumunu düzenleyip **Değişiklikleri Kaydet**
+düğmesine bastıktan sonra `/flights` adresini ve yayın ekranını yenileyerek sonucu
+görebilirsin. API'yi yeniden başlatmak gerekmez. Kaydedilmemiş değişiklikler ayrı
+bağlantı kullanan API'ye yansımaz; açık ekranlar henüz kendiliğinden yenilenmez.
+
+Veritabanı kurulmamışsa veya okunamıyorsa veri endpointleri `503` döndürür ve
+sunucu terminaline hata ayrıntısı yazılır. İlk kurulumda `init_db.py` çalıştırılmalıdır;
+API başlarken otomatik örnek kayıt eklemez. `/` yalnızca sunucu mesajıdır,
+veritabanı bağlantısını kontrol etmek için `/flights` adresini kullan.
+
+Uçuş ekleme/düzenleme/silme Gün 13'te; panelden kalıcı yayın atama ve otomatik
+yenileme Gün 14'te tamamlanacak.
 
 ---
 
@@ -302,6 +334,11 @@ Frontend'deki sabit verileri kaldırdım, CORS ayarını ve iki sunucuyla çalı
 SQLite'ta flights, pages ve screens tablolarını oluşturdum; primary key ve foreign key ilişkileriyle örnek verileri ekledim.
 SELECT, WHERE ve JOIN sorgularını; UPDATE ve DELETE işlemlerini SAVEPOINT ve ROLLBACK ile denedim.
 Tekrarlanabilir veritabanı kurulum komutunu hazırladım; kayıtların korunmasını ve foreign key kurallarını kontrol ettim.
+
+### Gün 12
+SQLAlchemy engine ve istek başına Session ile API'yi mevcut SQLite veritabanına bağladım.
+ORM tablo modellerini ve Pydantic yanıt şemalarını ayırdım; üç GET endpointindeki sabit listeleri SELECT sorgularıyla değiştirdim.
+Yanıt uyumluluğunu, kayıt değişikliklerinin yeni isteklere yansımasını ve veritabanı hata durumunu kontrol ettim.
 
 ---
 

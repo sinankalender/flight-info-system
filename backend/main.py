@@ -1,188 +1,50 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+import logging
+
+from fastapi import Depends, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.orm import Session
 
-class Ucus(BaseModel):
-    ucusNo: str
-    havayolu: str
-    yon: str
-    hatTipi: str
-    sehir: str
-    planlanan_saat: str
-    tahmini_saat: str
-    kapi: str
-    durum: str
+from backend.database import get_db
+from backend.models import EkranKaydi, UcusKaydi, YayinKaydi
+from backend.schemas import Ekran, Ucus, Yayin
 
-
-
-class Ekran(BaseModel):
-    id:int
-    name:str
-    yayinId:int
-    status:str
-
-
-class Yayin(BaseModel):
-    id: int
-    name: str
-    tip: str
-
-    yon: str | None = None
-    hatTipi: str | None = None
-    ucusNo: str | None = None
-    baslik: str | None = None
-    resimYolu: str | None = None
-    resimAciklama: str | None = None
-
-app= FastAPI()
+logger = logging.getLogger(__name__)
+app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5500"],
-    allow_methods=["GET"]
+    allow_methods=["GET"],
 )
-ucuslar = [
-    {
-        "ucusNo": "TK2241",
-        "havayolu": "THY",
-        "yon": "departure",
-        "hatTipi": "domestic",
-        "sehir": "Ankara",
-        "planlanan_saat": "13:35",
-        "tahmini_saat": "14:20",
-        "kapi": "2",
-        "durum": "Kalktı"
-    },
 
-    {
-        "ucusNo": "PC2657",
-        "havayolu": "PGT",
-        "yon": "departure",
-        "hatTipi": "domestic",
-        "sehir": "İstanbul",
-        "planlanan_saat": "17:35",
-        "tahmini_saat": "18:00",
-        "kapi": "5",
-        "durum": "Planlandı"
-    },
-    {
-    "ucusNo": "TK2351",
-    "havayolu": "AJT",
-    "yon": "departure",
-    "hatTipi": "domestic",
-    "sehir": "Antalya",
-    "planlanan_saat": "16:30",
-    "tahmini_saat": "17:00",
-    "kapi": "3",
-    "durum": "Gecikmeli"
-}
 
-]
-
-screens = [
-    {
-        "id": 1,
-        "name": "Gidiş Salonu İç Hatlar",
-        "yayinId": 1,
-        "status": "online"
-    },
-    {
-        "id": 2,
-        "name": "Geliş Salonu İç Hatlar",
-        "yayinId": 2,
-        "status": "online"
-    },
-    {
-        "id": 3,
-        "name": "Gidiş Salonu Dış Hatlar",
-        "yayinId": 3,
-        "status": "online"
-    },
-    {
-        "id": 4,
-        "name": "Geliş Salonu Dış Hatlar",
-        "yayinId": 4,
-        "status": "online"
-    },
-    {
-        "id": 5,
-        "name": "Ana Salon",
-        "yayinId": 5,
-        "status": "offline"
-    },
-    {
-        "id": 6,
-        "name": "Kapı 1 Gidiş",
-        "yayinId": 6,
-        "status": "online"
-    }
-]
-
-pages = [
-    {
-        "id": 1,
-        "name": "İç Hatlar Gidiş",
-        "tip": "liste",
-        "yon": "departure",
-        "hatTipi": "domestic"
-    },
-    {
-        "id": 2,
-        "name": "İç Hatlar Geliş",
-        "tip": "liste",
-        "yon": "arrival",
-        "hatTipi": "domestic"
-    },
-    {
-        "id": 3,
-        "name": "Dış Hatlar Gidiş",
-        "tip": "liste",
-        "yon": "departure",
-        "hatTipi": "international"
-    },
-    {
-        "id": 4,
-        "name": "Dış Hatlar Geliş",
-        "tip": "liste",
-        "yon": "arrival",
-        "hatTipi": "international"
-    },
-    {
-        "id": 5,
-        "name": "Görsel / Duyuru",
-        "tip": "gorsel",
-        "baslik": "Esenboğa Havalimanı'na Hoş Geldiniz",
-        "resimYolu": "images/hos-geldiniz.svg",
-        "resimAciklama": "İyi yolculuklar. Uçuşunuzun güncel saat ve kapı bilgilerini uçuş ekranlarından takip edebilirsiniz."
-    },
-    {
-        "id": 6,
-        "name": "Uçuş Bilgisi",
-        "tip": "tek-ucus",
-        "ucusNo": "PC2657"
-    }
-]
-
+@app.exception_handler(OperationalError)
+async def veritabani_hatasi(request: Request, error: OperationalError):
+    logger.error("Veritabanı okunamadı: %s", request.url.path, exc_info=error)
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Veritabanı okunamadı. Kurulumu ve sunucu kayıtlarını kontrol et."},
+    )
 
 
 @app.get("/")
 def ana_sayfa():
-    return {"message": "sunucu çalışıyor",
-            "havalimani": "ESB"}
+    return {"message": "sunucu çalışıyor", "havalimani": "ESB"}
 
-@app.get("/flights",
-response_model=list[Ucus])
-def ucuslari_getir():
-    return ucuslar
+
+@app.get("/flights", response_model=list[Ucus])
+def ucuslari_getir(db: Session = Depends(get_db)):
+    return db.scalars(select(UcusKaydi).order_by(UcusKaydi.id)).all()
+
 
 @app.get("/screens", response_model=list[Ekran])
-def ekranlari_getir():
-    return screens
+def ekranlari_getir(db: Session = Depends(get_db)):
+    return db.scalars(select(EkranKaydi).order_by(EkranKaydi.id)).all()
 
-@app.get(
-    "/pages",
-    response_model=list[Yayin],
-    response_model_exclude_none=True
-)
-def yayinlari_getir():
-    return pages
+
+@app.get("/pages", response_model=list[Yayin], response_model_exclude_none=True)
+def yayinlari_getir(db: Session = Depends(get_db)):
+    return db.scalars(select(YayinKaydi).order_by(YayinKaydi.id)).all()
