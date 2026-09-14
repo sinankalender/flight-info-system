@@ -1,3 +1,9 @@
 .venv/
 __pycache__/
 *.pyc
+
+# schema.sql ve seed.sql ile yeniden olusturulan yerel SQLite dosyalari
+/backend/flight_info.db
+/backend/flight_info.db-journal
+/backend/flight_info.db-wal
+/backend/flight_info.db-shm

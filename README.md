@@ -110,7 +110,11 @@ Proje gerçek kurum verisine bağımlı değildir. Tüm geliştirme, gerçekçi 
 flight-info-system/
 ├── backend/
 │   ├── main.py
-│   └── requirements.txt
+│   ├── requirements.txt
+│   ├── schema.sql
+│   ├── seed.sql
+│   ├── exercises.sql
+│   └── init_db.py
 ├── frontend/
 │   ├── index.html
 │   ├── ekran.html
@@ -151,7 +155,7 @@ CORS ayarı `http://127.0.0.1:5500` kaynağına izin verdiği için bu adresi ku
 Panelin kartları ve yayın ekranı verileri API'den alınır. Backend'e ulaşılamazsa açıklayıcı
 bir hata mesajı gösterilir; backend'i yeniden başlatıp sayfayı yenileyerek tekrar deneyebilirsin.
 Yayın seçimi henüz backend'e kaydedilmez; panelden açılan ekranın URL'sine aktarılır.
-Panel yenilenince başlangıç atamaları geri gelir. Açık yayın ekranının otomatik yenilenmesi Gün 15'te eklenecek.
+Panel yenilenince başlangıç atamaları geri gelir. Açık yayın ekranının otomatik yenilenmesi Gün 14'te eklenecek.
 
 ### Backend
 
@@ -170,6 +174,44 @@ Sunucuyu başlatmak için `baslat.bat` dosyasını çalıştır.
 - Swagger: http://127.0.0.1:8000/docs
 
 Sunucuyu durdurmak için terminalde Ctrl+C kullan.
+
+### SQLite veritabanı (Gün 11)
+
+Projenin ana klasöründe çalıştır:
+
+```powershell
+.\.venv\Scripts\python.exe backend/init_db.py
+```
+
+Komut `backend/flight_info.db` dosyasında tabloları oluşturur ve eksik örnek kayıtları ekler.
+Temiz kurulumda 3 uçuş, 6 yayın ve 6 ekran bulunur. Tekrar çalıştırmak mevcut kayıtları
+değiştirmez veya çoğaltmaz. Yol script'in konumundan belirlendiği için veritabanı hep
+`backend` klasöründe oluşturulur. DB Browser'da bekleyen yazma işlemi varsa önce onu
+kaydet veya geri al; açık bir yazma işlemi kurulum sırasında kilit hatasına neden olabilir.
+
+| Dosya | Görevi |
+|-------|--------|
+| `schema.sql` | Tablolar, primary key, unique ve foreign key tanımları |
+| `seed.sql` | Örnek uçuş, yayın ve ekran kayıtları |
+| `init_db.py` | İki SQL dosyasını tek transaction içinde uygulayan kurulum komutu |
+| `exercises.sql` | SELECT, WHERE, JOIN, UPDATE, DELETE ve geri alma alıştırmaları |
+
+SQLite dosyası ve günlük dosyaları Git'e eklenmez; kurulum SQL dosyalarından tekrarlanabilir.
+Tablo sırası `flights`, `pages`, `screens` şeklindedir. `screens.yayinId`, `pages.id` alanına;
+`pages.ucusNo`, `flights.ucusNo` alanına bağlıdır. Ekrana atanmış yayın silinemez.
+Bir uçuş silinirse ona bağlı yayının `ucusNo` alanı NULL olur; uçuş numarası değişirse
+yayındaki bağlantı da güncellenir. Bu örnek model uçuş numarasını benzersiz kabul eder.
+
+DB Browser for SQLite ile `backend/flight_info.db` dosyasını açıp Execute SQL sekmesinde
+`exercises.sql` içindeki blokları sırayla çalıştırabilirsin. Her yeni bağlantıda, transaction
+başlatmadan önce `PRAGMA foreign_keys = ON;` çalıştırılmalıdır.
+`SAVEPOINT` geri dönülebilecek bir nokta belirler; `ROLLBACK TO` değişiklikleri geri alır,
+`RELEASE` bu noktayı kaldırır. Alıştırmaları sonuna kadar çalıştırınca mevcut veriler korunur.
+Kalıcı yazma işlemlerinde transaction `COMMIT` ile tamamlanır; kurulum komutu bunu kendisi yapar.
+
+Gün 11'de veritabanı hazırlanmıştır; API hâlâ `main.py` içindeki Python listelerini okur.
+Veritabanında yapılan değişiklikler henüz tarayıcıya yansımaz. SQLAlchemy bağlantısı Gün 12'de eklenecek.
+
 ---
 
 ## API Endpointleri
@@ -185,7 +227,7 @@ Sunucuyu durdurmak için terminalde Ctrl+C kullan.
 
 ## Mimari
 
-<!-- Gün 15'te tamamlanacak.
+<!-- Gün 14'te tamamlanacak.
      Basit bir akış şeması yeterli:
      Yayın ekranı + Panel → FastAPI → SQLite -->
 
@@ -255,6 +297,11 @@ GET /flights, /screens ve /pages endpointlerini ekledim.
 Paneli ve yayın ekranını ortak api.js dosyasındaki fetch fonksiyonuyla backend'e bağladım.
 async/await ile verilerin gelmesini bekledim; HTTP hatalarını kontrol edip try/catch ile hata mesajları gösterdim.
 Frontend'deki sabit verileri kaldırdım, CORS ayarını ve iki sunucuyla çalıştırma adımlarını tamamladım.
+
+### Gün 11
+SQLite'ta flights, pages ve screens tablolarını oluşturdum; primary key ve foreign key ilişkileriyle örnek verileri ekledim.
+SELECT, WHERE ve JOIN sorgularını; UPDATE ve DELETE işlemlerini SAVEPOINT ve ROLLBACK ile denedim.
+Tekrarlanabilir veritabanı kurulum komutunu hazırladım; kayıtların korunmasını ve foreign key kurallarını kontrol ettim.
 
 ---
 
