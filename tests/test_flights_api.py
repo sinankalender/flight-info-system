@@ -1,12 +1,14 @@
 """Uçuş API testleri; her test ayrı, geçici SQLite veritabanı kullanır."""
 
 import asyncio
+import base64
 from contextlib import closing
 import json
 from pathlib import Path
 import sqlite3
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
@@ -14,6 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from backend.database import foreign_key_ac, get_db
 from backend.init_db import init_database
 from backend.main import app
+from backend import images
 
 
 class FlightAPITests(unittest.TestCase):
@@ -48,7 +51,7 @@ class FlightAPITests(unittest.TestCase):
     def request(self, method, path, data=None, headers=None):
         async def run():
             messages = []
-            body = json.dumps(data).encode() if data is not None else b""
+            body = data if isinstance(data, bytes) else json.dumps(data).encode() if data is not None else b""
 
             async def receive():
                 return {"type": "http.request", "body": body, "more_body": False}
@@ -148,7 +151,7 @@ class FlightAPITests(unittest.TestCase):
         self.assertEqual(self.request("GET", "/flights"), (200, []))
 
     def test_browser_cors_preflight(self):
-        for method in (b"POST", b"PUT", b"DELETE"):
+        for method in (b"POST", b"PUT", b"PATCH", b"DELETE"):
             status, _ = self.request("OPTIONS", "/flights", headers=[
                 (b"origin", b"http://127.0.0.1:5500"),
                 (b"access-control-request-method", method),
@@ -169,6 +172,95 @@ class FlightAPITests(unittest.TestCase):
             blocker.close()
         self.assertEqual(len(self.request("GET", "/flights")[1]), 3)
         self.assertEqual(self.request("POST", "/flights", self.flight)[0], 201)
+
+
+    def test_screen_assignment_persists_and_preserves_other_fields(self):
+        original = self.request("GET", "/screens")[1]
+        status, updated = self.request("PATCH", "/screens/1", {"yayinId": 5})
+        self.assertEqual(status, 200)
+        self.assertEqual(updated, {**original[0], "yayinId": 5})
+        self.engine.dispose()
+        current = self.request("GET", "/screens")[1]
+        self.assertEqual(current[0], updated)
+        self.assertEqual(current[1:], original[1:])
+        with closing(sqlite3.connect(self.db_path)) as db:
+            self.assertEqual(db.execute("SELECT yayinId FROM screens WHERE id=1").fetchone(), (5,))
+        self.assertEqual(self.request("PATCH", "/screens/1", {"yayinId": 5}), (200, updated))
+
+    def test_invalid_screen_assignments_do_not_change_database(self):
+        original = self.request("GET", "/screens")[1]
+        for body in [{}, {"yayinId": 0}, {"yayinId": -1}, {"yayinId": True},
+                     {"yayinId": "5"}, {"yayinId": 1.5}, {"yayinId": 5, "status": "offline"}]:
+            with self.subTest(body=body):
+                self.assertEqual(self.request("PATCH", "/screens/1", body)[0], 422)
+        self.assertEqual(self.request("PATCH", "/screens/1", {"yayinId": 999})[0], 404)
+        self.assertEqual(self.request("PATCH", "/screens/999", {"yayinId": 5})[0], 404)
+        self.assertEqual(self.request("GET", "/screens")[1], original)
+
+    def test_locked_screen_assignment_recovers(self):
+        blocker = sqlite3.connect(self.db_path)
+        try:
+            blocker.execute("BEGIN EXCLUSIVE")
+            with self.assertLogs("backend.main", level="ERROR"):
+                status, error = self.request("PATCH", "/screens/1", {"yayinId": 5})
+            self.assertEqual(status, 503)
+            self.assertIn("kilitli", error["detail"])
+        finally:
+            blocker.rollback()
+            blocker.close()
+        self.assertEqual(self.request("GET", "/screens")[1][0]["yayinId"], 1)
+        self.assertEqual(self.request("PATCH", "/screens/1", {"yayinId": 5})[0], 200)
+
+
+    def test_edit_announcement_persists_and_preserves_assignments(self):
+        original_screens = self.request("GET", "/screens")[1]
+        data = {"tip": "gorsel", "name": "Yeni duyuru", "baslik": "İyi yolculuklar",
+                "resimYolu": "images/hos-geldiniz.svg", "resimAciklama": "Kapı bilgilerini takip edin."}
+        status, updated = self.request("PUT", "/pages/5", data)
+        self.assertEqual(status, 200)
+        self.assertEqual(updated, {"id": 5, **data})
+        self.engine.dispose()
+        self.assertEqual(self.request("GET", "/pages")[1][4], updated)
+        self.assertEqual(self.request("GET", "/screens")[1], original_screens)
+
+    def test_change_single_flight_and_repair_unassigned_publication(self):
+        self.request("DELETE", "/flights/2")
+        self.assertNotIn("ucusNo", self.request("GET", "/pages")[1][5])
+        data = {"tip": "tek-ucus", "name": "Kapı uçuşu", "ucusNo": "TK2241"}
+        status, updated = self.request("PUT", "/pages/6", data)
+        self.assertEqual(status, 200)
+        self.assertEqual(updated, {"id": 6, **data})
+        self.engine.dispose()
+        self.assertEqual(self.request("GET", "/pages")[1][5], updated)
+
+    def test_invalid_publication_edits_preserve_data(self):
+        original = self.request("GET", "/pages")[1]
+        flight = {"tip": "tek-ucus", "name": "Uçuş", "ucusNo": "NO999"}
+        self.assertEqual(self.request("PUT", "/pages/6", flight)[0], 404)
+        self.assertEqual(self.request("PUT", "/pages/999", flight)[0], 404)
+        self.assertEqual(self.request("PUT", "/pages/5", flight)[0], 409)
+        for path in ("javascript:alert(1)", "file:///c:/image.png", "images/../private.png", "//example.com/image.png", ""):
+            data = {"tip": "gorsel", "name": "Duyuru", "baslik": "Başlık", "resimYolu": path}
+            self.assertEqual(self.request("PUT", "/pages/5", data)[0], 422)
+        self.assertEqual(self.request("GET", "/pages")[1], original)
+
+    def test_upload_image_and_link_to_publication(self):
+        png = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jH9kAAAAASUVORK5CYII=")
+        upload_dir = Path(self.folder.name) / "uploads"
+        with patch.object(images, "IMAGE_DIR", upload_dir):
+            status, result = self.request("POST", "/images", png)
+        self.assertEqual(status, 201)
+        self.assertTrue(result["resimYolu"].startswith("images/uploads/"))
+        self.assertEqual((upload_dir / Path(result["resimYolu"]).name).read_bytes(), png)
+        data = {"tip": "gorsel", "name": "Duyuru", "baslik": "Başlık", **result}
+        self.assertEqual(self.request("PUT", "/pages/5", data)[0], 200)
+
+    def test_reject_invalid_or_oversized_upload(self):
+        upload_dir = Path(self.folder.name) / "uploads"
+        with patch.object(images, "IMAGE_DIR", upload_dir):
+            self.assertEqual(self.request("POST", "/images", b"<html>not an image</html>")[0], 415)
+            self.assertEqual(self.request("POST", "/images", b"x" * (images.MAX_IMAGE_SIZE + 1))[0], 413)
+        self.assertFalse(upload_dir.exists())
 
 
 if __name__ == "__main__":

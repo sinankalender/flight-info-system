@@ -1,40 +1,41 @@
 const API_URL = "http://127.0.0.1:8000";
 
 async function veriGetir(endpoint, options = {}) {
-  let response;
+  const controller = new AbortController();
+  const zamanAsimi = setTimeout(() => controller.abort(), 10000);
   try {
-    response = await fetch(API_URL + endpoint, options);
+    const response = await fetch(API_URL + endpoint, {
+      cache: "no-store", ...options, signal: controller.signal,
+    });
+    if (!response.ok) {
+      const hata = await response.json().catch(() => ({}));
+      if (typeof hata.detail === "string") throw new Error(hata.detail);
+      if (Array.isArray(hata.detail)) {
+        const alanlar = {
+          ucusNo: "Uçuş no", havayolu: "Havayolu", yon: "Yön",
+          hatTipi: "Hat tipi", sehir: "Şehir", planlanan_saat: "Planlanan saat",
+          tahmini_saat: "Tahmini saat", kapi: "Kapı", durum: "Durum", yayinId: "Yayın",
+          name: "Yayın adı", baslik: "Duyuru başlığı", resimYolu: "Görsel adresi", resimAciklama: "Açıklama",
+        };
+        const hataliAlanlar = hata.detail.map(item => alanlar[item.loc?.at(-1)] || "Form");
+        throw new Error(`Geçersiz veya eksik alan: ${[...new Set(hataliAlanlar)].join(", ")}. Bilgileri kontrol et.`);
+      }
+      throw new Error(`İstek başarısız: ${response.status}`);
+    }
+    // DELETE başarılı olduğunda yanıt gövdesi yoktur.
+    return response.status === 204 ? null : await response.json();
   } catch (error) {
-    throw new Error("Sunucuya ulaşılamadı. Bağlantıyı kontrol et; kayıt işlemi yaptıysan tekrar göndermeden önce listeyi yenile.");
-  }
-
-  if (!response.ok) {
-    const hata = await response.json().catch(() => ({}));
-    if (typeof hata.detail === "string") {
-      throw new Error(hata.detail);
+    if (error.name === "AbortError" || error instanceof TypeError) {
+      const neden = error.name === "AbortError" ? "Sunucu zamanında yanıt vermedi." : "Sunucuya ulaşılamadı.";
+      const kontrol = options.method && options.method !== "GET"
+        ? " Kayıt işlemini tekrar göndermeden önce listeyi yenile."
+        : "";
+      throw new Error(`${neden} Bağlantıyı kontrol et.${kontrol}`);
     }
-    if (Array.isArray(hata.detail)) {
-      const alanlar = {
-        ucusNo: "Uçuş no", havayolu: "Havayolu", yon: "Yön",
-        hatTipi: "Hat tipi", sehir: "Şehir", planlanan_saat: "Planlanan saat",
-        tahmini_saat: "Tahmini saat", kapi: "Kapı", durum: "Durum",
-      };
-      const hataliAlanlar = hata.detail.map(item => {
-        const alan = item.loc?.at(-1);
-        return alanlar[alan] || "Form";
-      });
-      throw new Error(`Geçersiz veya eksik alan: ${[...new Set(hataliAlanlar)].join(", ")}. Bilgileri kontrol et.`);
-    }
-    throw new Error(`İstek başarısız: ${response.status}`);
+    throw error;
+  } finally {
+    clearTimeout(zamanAsimi);
   }
-
-  // DELETE başarılı olduğunda yanıt gövdesi yoktur.
-  if (response.status === 204) {
-    return null;
-  }
-
-  const veri = await response.json();
-  return veri;
 }
 
 function veriGonder(endpoint, method, veri) {

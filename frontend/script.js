@@ -11,8 +11,16 @@ const gorselResim = document.querySelector("#gorsel-resim");
 const baslik = document.querySelector("#yayin-baslik");
 const mesaj = document.querySelector("#ekran-mesaj");
 const tamEkranButton = document.querySelector("#tam-ekran");
+const baglantiDurumu = document.querySelector("#baglanti-durumu");
+const YENILEME_ARALIGI = 5000;
+let sonVeri = "";
+let sonBasariliSaat = "";
+let yenilemeZamanlayicisi;
+let ekranKapandi = false;
+let yenilemeSuruyor = false;
 
 const params = new URLSearchParams(window.location.search);
+if (params.get("onizleme") === "1") document.documentElement.classList.add("onizleme");
 
 // Parametre verilmezse ilk ekranı aç.
 const screenId = Number(params.get("id") ?? "1");
@@ -56,19 +64,13 @@ function renderYayin() {
     return;
   }
 
-  // Panelden gelindiyse seçilen yayını URL'den al.
-  // Sadece ?id=3 yazıldıysa ekranın başlangıç atamasını kullan.
-  const yayinId = params.has("yayinId")
-    ? Number(params.get("yayinId"))
-    : screen.yayinId;
-
   const page = pages.find(function(page) {
-    return page.id === yayinId;
+    return page.id === screen.yayinId;
   });
 
   if (!page) {
     baslik.textContent = "Yayın bulunamadı";
-    mesajGoster("URL içindeki yayın id değerini kontrol et.");
+    mesajGoster("Ana sayfadan bu ekrana geçerli bir yayın ata.");
     return;
   }
 
@@ -107,6 +109,7 @@ function renderYayin() {
     }
 
     gorselBaslik.textContent = page.baslik || page.name;
+    document.querySelector("#gorsel-aciklama").textContent = page.resimAciklama || "";
     gorselResim.alt = page.resimAciklama || gorselBaslik.textContent;
     gorselAlani.hidden = false;
     gorselResim.src = page.resimYolu;
@@ -175,30 +178,51 @@ document.addEventListener("fullscreenchange", function() {
 });
 
 async function ekraniBaslat() {
-  table.hidden = true;
-  tekUcusAlani.hidden = true;
-  gorselAlani.hidden = true;
-
-  baslik.textContent = "Yayın yükleniyor...";
-  mesajGoster("Veriler alınıyor...");
-
+  if (yenilemeSuruyor) return;
+  yenilemeSuruyor = true;
   try {
-    pages = await veriGetir("/pages");
-    screens = await veriGetir("/screens");
-    ucuslar = await veriGetir("/flights");
-
-    renderYayin();
+    const sonuclar = await Promise.allSettled([
+      veriGetir("/pages"), veriGetir("/screens"), veriGetir("/flights"),
+    ]);
+    const hata = sonuclar.find(sonuc => sonuc.status === "rejected");
+    if (hata) throw hata.reason;
+    const veriler = sonuclar.map(sonuc => sonuc.value);
+    const yeniVeri = JSON.stringify(veriler);
+    // Değişiklik yoksa DOM'u ve görseli tekrar oluşturma.
+    if (yeniVeri !== sonVeri || (!gorselAlani.hidden && gorselResim.complete && !gorselResim.naturalWidth)) {
+      [pages, screens, ucuslar] = veriler;
+      renderYayin();
+      sonVeri = yeniVeri;
+    }
+    sonBasariliSaat = new Date().toLocaleTimeString("tr-TR", { timeZone: "Europe/Istanbul" });
+    baglantiDurumu.textContent = `Son güncelleme: ${sonBasariliSaat}`;
+    baglantiDurumu.className = "";
   } catch (error) {
-    table.hidden = true;
-    tekUcusAlani.hidden = true;
-    gorselAlani.hidden = true;
-    baslik.textContent = "Yayın yüklenemedi";
-    mesajGoster(
-      `Sunucudan veri alınamadı. ${error.message}`
-    );
-
-    console.error(error);
+    if (!sonVeri) {
+      baslik.textContent = "Yayın yüklenemedi";
+      mesajGoster("Veri bekleniyor. Bağlantı gelince yayın otomatik açılacak.");
+    }
+    const eskiVeriUyarisi = sonVeri ? `Gösterilen bilgiler güncel olmayabilir. Son başarılı güncelleme: ${sonBasariliSaat}. ` : "";
+    baglantiDurumu.className = "baglanti-hatasi";
+    baglantiDurumu.textContent = `${eskiVeriUyarisi}${error.message} Otomatik olarak tekrar denenecek.`;
+  } finally {
+    yenilemeSuruyor = false;
+    // Bir tur bitince yenisini planla; yavaş istekler üst üste binmez.
+    if (!ekranKapandi) yenilemeZamanlayicisi = setTimeout(ekraniBaslat, YENILEME_ARALIGI);
   }
 }
 
+window.addEventListener("pagehide", () => {
+  ekranKapandi = true;
+  clearTimeout(yenilemeZamanlayicisi);
+});
+window.addEventListener("pageshow", event => {
+  if (event.persisted) {
+    ekranKapandi = false;
+    ekraniBaslat();
+  }
+});
+
+baslik.textContent = "Yayın yükleniyor...";
+mesajGoster("Veriler alınıyor...");
 ekraniBaslat();

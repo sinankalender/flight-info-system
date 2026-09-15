@@ -112,3 +112,10 @@ h1 {
     height: 58vh;
     object-fit: contain;
 }
+
+#baglanti-durumu { font-size: 0.9rem; color: #cbd5e1; }
+#baglanti-durumu.baglanti-hatasi {
+    padding: 12px; border: 2px solid #facc15; color: #facc15;
+}
+header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.onizleme #tam-ekran { display: none; }

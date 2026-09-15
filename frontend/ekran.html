@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flight Information System</title>
-    <link rel="stylesheet" href="css/ekran.css">
+    <title>Havalimanı Uçuş Bilgi Sistemi</title>
+    <link rel="stylesheet" href="css/ekran.css?v=14.2">
 </head>
 <body>
     <header>
-        <h1>Airport Flight Information System</h1>  
-        <time datetime=""></time>Saat: 15:35</b> 
+        <h1>Havalimanı Uçuş Bilgi Sistemi</h1>
+        <time id="saat"></time>
     </header>
     <main>
 
@@ -17,6 +17,7 @@
             <p id="yayin-baslik">Uçuşlar</p>
             <button id="tam-ekran" type="button">Tam ekran</button>
             <p id="ekran-mesaj" role="status" hidden></p>
+            <p id="baglanti-durumu" role="status"></p>
 
             <table hidden>
                 <thead>
@@ -64,6 +65,7 @@
             <div id="gorsel-yayin" hidden>
                 <h2 id="gorsel-baslik"></h2>
                 <img id="gorsel-resim" alt="">
+                <p id="gorsel-aciklama"></p>
             </div>
 
 
@@ -71,7 +73,8 @@
 
         
     </main>
-    <script src="api.js?v=13.1"></script>
-    <script src="script.js?v=13.1"></script>
+    <script src="api.js?v=14.2"></script>
+    <script src="script.js?v=14.2"></script>
+    <script src="saat.js?v=14.2"></script>
 </body>
 </html>

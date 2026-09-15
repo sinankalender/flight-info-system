@@ -1,7 +1,8 @@
 import logging
 import sqlite3
+from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException, Request, Response
+from fastapi import Body, Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from sqlalchemy import select
@@ -10,15 +11,17 @@ from sqlalchemy.orm import Session
 
 from backend.database import get_db
 from backend.models import EkranKaydi, UcusKaydi, YayinKaydi
-from backend.schemas import Ekran, Ucus, UcusYaz, Yayin
+from backend.schemas import Ekran, EkranYayinYaz, GorselYayinYaz, TekUcusYayinYaz, Ucus, UcusYaz, Yayin
+from backend.images import router as images_router
 
 logger = logging.getLogger(__name__)
 app = FastAPI()
+app.include_router(images_router)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://127.0.0.1:5500"],
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Content-Type"],
 )
 
@@ -105,6 +108,48 @@ def ekranlari_getir(db: Session = Depends(get_db)):
     return db.scalars(select(EkranKaydi).order_by(EkranKaydi.id)).all()
 
 
+@app.patch("/screens/{ekran_id}", response_model=Ekran)
+def ekran_yayinini_degistir(ekran_id: int, veri: EkranYayinYaz, db: Session = Depends(get_db)):
+    ekran = db.get(EkranKaydi, ekran_id)
+    if ekran is None:
+        raise HTTPException(status_code=404, detail="Ekran bulunamadı. Ekran listesini yenile.")
+    if db.get(YayinKaydi, veri.yayinId) is None:
+        raise HTTPException(status_code=404, detail="Yayın bulunamadı. Ekran listesini yenile.")
+    ekran.yayinId = veri.yayinId
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Yayın atanamadı. Ekran listesini yenileyip tekrar dene.") from error
+    db.refresh(ekran)
+    return ekran
+
+
 @app.get("/pages", response_model=list[Yayin], response_model_exclude_none=True)
 def yayinlari_getir(db: Session = Depends(get_db)):
     return db.scalars(select(YayinKaydi).order_by(YayinKaydi.id)).all()
+
+
+@app.put("/pages/{yayin_id}", response_model=Yayin, response_model_exclude_none=True)
+def yayin_icerigini_duzenle(
+    yayin_id: int,
+    veri: Annotated[GorselYayinYaz | TekUcusYayinYaz, Body(discriminator="tip")],
+    db: Session = Depends(get_db),
+):
+    yayin = db.get(YayinKaydi, yayin_id)
+    if yayin is None:
+        raise HTTPException(status_code=404, detail="Yayın bulunamadı. Yayınları yenile.")
+    if yayin.tip != veri.tip:
+        raise HTTPException(status_code=409, detail="Yayın tipi değiştirilemez.")
+    if isinstance(veri, TekUcusYayinYaz):
+        if db.scalar(select(UcusKaydi).where(UcusKaydi.ucusNo == veri.ucusNo)) is None:
+            raise HTTPException(status_code=404, detail="Seçilen uçuş bulunamadı. Uçuşları yenileyip tekrar seç.")
+    for alan, deger in veri.model_dump(exclude={"tip"}).items():
+        setattr(yayin, alan, deger)
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Yayın kaydedilemedi. Uçuşları yenileyip tekrar dene.") from error
+    db.refresh(yayin)
+    return yayin

@@ -2,6 +2,9 @@
 
 Ankara Esenboğa Havalimanı (ESB) için uçuş bilgi ekranlarını yöneten web tabanlı bir sistem. Terminaldeki monitörlerde hangi içeriğin görüneceği tek bir panelden belirlenir.
 
+14 günlük geliştirme planı tamamlandı. Uçuş yönetimi ve kalıcı yayın atama mevcut
+`index.html` ana sayfasındadır. `ekran.html?id=1` gibi adresler monitörün yayın görünümüdür.
+
 ---
 
 ## Projenin amacı
@@ -28,9 +31,9 @@ Bu nedenle proje bilinçli olarak:
 
 Sistem iki ayrı arayüzden oluşur:
 
-**Yayın ekranı** — Monitörde görünen sayfa. Tam ekran, koyu zemin, büyük yazı, hiç etkileşim yok. Her monitör kendi adresini açar (`ekran.html?id=3` gibi). Gerçek havalimanı tabelalarında da mantık budur: monitörün arkasındaki bilgisayar tam ekran bir tarayıcıda o adresi gösterir.
+**Yayın ekranı** — Monitörde görünen sayfa. Koyu zemin ve büyük yazılarla uçuş bilgilerini gösterir; düğmeyle tam ekran açılabilir. Her monitör kendi adresini açar (`ekran.html?id=3` gibi).
 
-**Yönetim paneli** — Operatörün kullandığı sayfa. Ekranların listesi, hangi ekranda ne yayınlandığı, ekranlara yayın atama ve uçuş verisi girişi buradan yapılır.
+**Ana sayfa (`index.html`)** — Uçuş ekleme, düzenleme, silme ve ekranlara yayın atama burada yapılır. Ayrı bir admin sayfası veya giriş ekranı bulunmaz.
 
 ### Çekirdek kavramlar
 
@@ -66,25 +69,32 @@ Bir yayın birden fazla ekranda gösterilebilir. Bir ekranın yayınını deği�
 
 ## Özellikler
 
-Tamamlandıkça işaretlenecek.
+Tamamlanan özellikler:
 
 **Yayın ekranı**
-- [ ] Uçuş listesi ekranı (gelen / giden)
-- [ ] İç hat / dış hat ayrımı
-- [ ] Tek uçuş ekranı (kapı / kontuar)
-- [ ] Görsel ve duyuru ekranı
-- [ ] Tam ekran görünüm
-- [ ] Otomatik yenileme
 
-**Yönetim paneli**
-- [ ] Ekran listesi ve durum göstergesi
-- [ ] Ekrana yayın atama
+- [x] Uçuş listesi ekranı (gelen / giden)
+- [x] İç hat / dış hat ayrımı
+- [x] Tek uçuş ekranı (kapı / kontuar)
+- [x] Görsel ve duyuru ekranı
+- [x] Tam ekran görünüm
+- [x] Otomatik yenileme
+
+**Ana sayfa**
+
+- [x] Ekran listesi ve kayıtlı durum göstergesi
+- [x] Ekran kartlarında canlı yayın önizlemesi
+- [x] Ekrana kalıcı yayın atama
 - [x] Uçuş listesi görüntüleme
+- [x] İç/dış hat ve gidiş/geliş seçimine göre uçuş filtreleme
 - [x] Uçuş ekleme
 - [x] Uçuş düzenleme
 - [x] Uçuş silme
+- [x] Açılır kapanır uçuş ve yayın düzenleme formları
+- [x] Duyuru düzenleme, görsel yükleme ve tek uçuş seçimi
 
 **Altyapı**
+
 - [x] REST API ile veri sunumu
 - [x] Veritabanı entegrasyonu
 - [x] Uçuşlar için tam CRUD işlemleri
@@ -93,14 +103,12 @@ Tamamlandıkça işaretlenecek.
 
 Planlandı · Kontuar Açık · Kapı Kapandı · Gecikmeli · İndi · Kalktı · İptal Edildi
 
-<!-- Gün 3'te veri modelini kesinleştirirken bu listeyi de kesinleştir.
-     Fotoğraflardaki gerçek ekranlarda hangi durumlar geçiyor, ona bak. -->
 
 ---
 
 ## Veri stratejisi
 
-Proje gerçek kurum verisine bağımlı değildir. Tüm geliştirme, gerçekçi biçimde hazırlanmış **örnek uçuş verileri** ile yapılmaktadır. Uçuş numaraları ve havayolu kodları gerçek ESB trafiğine uygun seçilmiştir (TK, PC, VF, XQ).
+Proje gerçek kurum verisine bağımlı değildir. Geliştirme ve testler **örnek uçuş verileri** ile yapılır. Bu kayıtlar gerçek veya güncel ESB uçuş trafiğini temsil etmez.
 
 ---
 
@@ -113,6 +121,7 @@ flight-info-system/
 │   ├── database.py
 │   ├── models.py
 │   ├── schemas.py
+│   ├── images.py
 │   ├── requirements.txt
 │   ├── schema.sql
 │   ├── seed.sql
@@ -124,6 +133,8 @@ flight-info-system/
 │   ├── api.js
 │   ├── app.js
 │   ├── flights.js
+│   ├── yayinlar.js
+│   ├── saat.js
 │   ├── script.js
 │   ├── css/
 │   │   ├── panel.css
@@ -133,6 +144,7 @@ flight-info-system/
 ├── tests/
 │   └── test_flights_api.py
 ├── baslat.bat
+├── frontend-baslat.bat
 └── README.md
 ```
 
@@ -143,7 +155,8 @@ flight-info-system/
 ### Frontend
 
 Önce aşağıdaki Backend bölümündeki kurulumu tamamla ve `baslat.bat` ile API'yi çalıştır.
-Ardından projenin ana klasöründe ikinci bir terminal aç:
+Frontend için `frontend-baslat.bat` dosyasına çift tıklayabilirsin. Terminalden başlatmak
+istersen projenin ana klasöründe ikinci bir terminal aç ve çalıştır:
 
 ```powershell
 .\.venv\Scripts\python.exe -m http.server 5500 --bind 127.0.0.1 --directory frontend
@@ -154,14 +167,16 @@ Ardından projenin ana klasöründe ikinci bir terminal aç:
 - Tek uçuş yayını: http://127.0.0.1:5500/ekran.html?id=6
 - Görsel yayını: http://127.0.0.1:5500/ekran.html?id=5
 
+Bu yayın türleri ilk kurulumdaki atamalardır; panelden yayın değiştirildiğinde aynı adres yeni atanan içeriği gösterir.
+
 İki sunucu da açık kalmalı. HTML dosyalarını HTTP adreslerinden aç.
 `5500` portu sayfaları, `8000` portu API verilerini sunar; backend'de `/index.html` adresi yoktur.
 CORS ayarı `http://127.0.0.1:5500` kaynağına izin verdiği için bu adresi kullan.
 
 Panelin kartları ve yayın ekranı verileri API'den alınır. Backend'e ulaşılamazsa açıklayıcı
 bir hata mesajı gösterilir; backend'i yeniden başlatıp sayfayı yenileyerek tekrar deneyebilirsin.
-Yayın seçimi henüz backend'e kaydedilmez; panelden açılan ekranın URL'sine aktarılır.
-Panel yenilenince başlangıç atamaları geri gelir. Açık yayın ekranının otomatik yenilenmesi Gün 14'te eklenecek.
+Ana sayfadaki yayın seçimi backend'e kaydedilir; sayfa yenilense de korunur.
+Açık yayın ekranı uçuşları ve yayın atamasını otomatik alır.
 
 ### Backend
 
@@ -237,7 +252,7 @@ ORM modeli tabloyu temsil eder; Pydantic modeli dışarıya dönen JSON'u tanım
 DB Browser'da bir uçuşun kapısını veya durumunu düzenleyip **Değişiklikleri Kaydet**
 düğmesine bastıktan sonra `/flights` adresini ve yayın ekranını yenileyerek sonucu
 görebilirsin. API'yi yeniden başlatmak gerekmez. Kaydedilmemiş değişiklikler ayrı
-bağlantı kullanan API'ye yansımaz; açık ekranlar henüz kendiliğinden yenilenmez.
+bağlantı kullanan API'ye yansımaz. Gün 14 itibarıyla açık yayın ekranları otomatik yenilenir.
 
 Veritabanı kurulmamışsa veya okunamıyorsa veri endpointleri `503` döndürür ve
 sunucu terminaline hata ayrıntısı yazılır. İlk kurulumda `init_db.py` çalıştırılmalıdır;
@@ -246,13 +261,37 @@ veritabanı bağlantısını kontrol etmek için `/flights` adresini kullan.
 
 ### Panelden uçuş yönetimi (Gün 13)
 
-`index.html` sayfasında uçuş ekleme formu ve veritabanından yüklenen uçuş tablosu bulunur.
+`index.html` sayfasında hat/yön seçimi, açılır uçuş formu ve veritabanından yüklenen uçuş tablosu bulunur.
 `flights.js` bu formu ve tabloyu yönetir; `app.js` ekran kartlarını yönetmeye devam eder.
 
-- **Uçuş ekle:** Tüm alanları doldurup kaydet. Uçuş numarası büyük harfe çevrilir ve benzersiz olmalıdır.
-- **Düzenle:** Satırdaki düğme, uçuşu forma doldurur. Değişiklikleri kaydet veya **Vazgeç** ile düzenlemeyi bırak.
+- **Hat ve yön:** İç/dış hat ile gidiş/geliş seç; tabloda yalnızca o grubun uçuşları görünür.
+  Başlangıçta iç hatlar gidiş gösterilir. Seçilen grubun uçuş sayısı ve boş grup mesajı görünür.
+- **Yeni uçuş ekle:** Kapalı formu başlığına tıklayarak aç. Hat/yön seçimi forma hazır gelir.
+  Uçuş numarası büyük harfe çevrilir ve benzersiz olmalıdır.
+- **Düzenle:** Satırdaki düğme, ilgili uçuşun formunu açar. Kaydet veya **Vazgeç** ile kapat.
+  Kayıt başka gruba taşınırsa tablo yeni grubuna geçer. Hata durumunda form açık ve dolu kalır.
 - **Sil:** Onaydan sonra kayıt silinir. Bağlı tek uçuş yayını silinmez; yenilendiğinde uçuş bulunamadı mesajı gösterir.
-- **Listeyi yenile:** Başka bir yerde kaydedilen değişiklikleri alır. Yayın ekranları henüz elle yenilenir.
+- **Listeyi yenile:** Ana sayfada başka bir yerde kaydedilen uçuş değişikliklerini alır. Yayın ekranları otomatik yenilenir.
+
+### Duyuru ve uçuş bilgisi düzenleme
+
+Ana sayfadaki **Duyuru ve uçuş bilgisi** bölümünde yayın içerikleri düzenlenir.
+Alanlar başlangıçta kapalıdır; yayın başlığına tıklayınca düzenleme formu açılır.
+Ekran kartındaki **Yayın içeriğini düzenle** bağlantısı da ilgili kapalı alanı açar.
+
+- **Görsel / Duyuru:** Yayın adı, başlık, görsel ve açıklama değiştirilebilir. Bilgisayardan
+  PNG/JPEG/GIF/WebP seçilebilir (en fazla 2 MB); mevcut bir `images/...` yolu veya HTTP(S)
+  görsel adresi de kullanılabilir. Önizleme görüntülenir; **Yayını kaydet** ile kalıcı kaydedilir.
+- **Uçuş Bilgisi:** Gösterilecek uçuş listeden seçilir. Uçuş silinmişse başka bir uçuş
+  seçilerek yayın yeniden kullanılabilir. Uçuş ekleme/silme sonrası seçenekler güncellenir.
+- **Vazgeç:** Formu son kaydedilen değerlere döndürür ve kapatır. **Yayınları ve uçuşları yenile**
+  sunucudaki güncel kayıtları yeniden getirir; kaydedilmemiş form değişikliklerini sıfırlar.
+
+Değişiklikler aynı yayını kullanan bütün ekranlara otomatik yansır. Açıklama görselin
+altında gösterilir. Liste yayınlarının filtreleri bu formlardan değiştirilmez.
+Yüklenen görseller `frontend/images/uploads/` altında saklanır ve Git'e eklenmez.
+Verilerini yedeklerken bu klasörü de SQLite dosyasıyla birlikte kopyala. Eski görseller
+başka yayınlarda kullanılabileceği için otomatik silinmez.
 
 API yanıtlarına sabit kayıt kimliği olan `id` eklendi. Düzenleme ve silme bu kimlikle yapılır;
 uçuş numarası değişirse bağlı yayındaki numara da foreign key kuralıyla güncellenir.
@@ -266,9 +305,35 @@ kapatmayı anlatan mesaj gösterilir. Kaydetme hatasında formdaki bilgiler koru
 
 Panelden yazmak için DB Browser açmak gerekmez. SQLite terminali veya DB Browser'da
 bekleyen işlem bırakma; kaydetme başarılı olduktan sonra bağlantıyı kapat.
-Panelden kalıcı yayın atama ve otomatik yenileme Gün 14'te tamamlanacak.
+### Kalıcı yayın atama ve otomatik güncelleme (Gün 14)
 
-### Gün 13 testleri
+Ana sayfadaki **Ekranlar ve yayınlar** bölümünde bir yayın seçince `PATCH /screens/{ekran_id}`
+ile yalnızca `yayinId` güncellenir. **Kaydedildi** mesajı işlem tamamlandığında görünür.
+Hata durumunda seçim önceki değere döner; bağlantı sorunu varsa yeniden kaydetmeden önce
+**Ekranları yenile** düğmesiyle sunucudaki son durumu kontrol et.
+
+**Ekranı aç** bağlantısı yalnızca ekran kimliğini taşır (`ekran.html?id=1`).
+Eski bağlantılardaki `yayinId` parametresi artık dikkate alınmaz; kayıtlı atama kullanılır.
+Aktif yayın sayfası her tamamlanan sorgu turundan yaklaşık 5 saniye sonra yeniden sorgular.
+Bir tur bitmeden yenisi başlamaz; istekler 10 saniyede zaman aşımına uğrar.
+Tarayıcı arka plandaki sekmelerin zamanlayıcılarını yavaşlatabilir.
+
+Bağlantı kesilirse son alınan içerik, güncel olmayabileceğini belirten uyarıyla gösterilir.
+Hiç veri alınmamışsa bekleme mesajı görünür. Bağlantı gelince içerik otomatik toparlanır.
+Veri değişmediyse DOM yeniden çizilmez; görsel her turda tekrar yüklenmez ve tam ekran korunur.
+İki sayfanın saati Türkiye saat dilimine göre güncellenir.
+
+Ekran kartlarındaki online/offline değerleri örnek veritabanı kayıtlarıdır;
+gerçek cihaz bağlantısını ölçmez. Uçuşlar ve yayın tanımları da örnek verilerdir.
+
+Ana sayfadaki kartlar, yayın sayfasını `iframe` içinde canlı olarak gösterir.
+Önizlemeler 1280×720 yayın görünümünden kart genişliğine ölçeklenir ve yaklaşık
+5 saniyede güncellenir. Önizlemeye tıklamak yayını ayrı sekmede açar.
+Ekrana yaklaşıldığında yüklenen bu önizlemeler kendi API sorgularını yapar;
+altı ekranlık örnek kurulum için uygundur. Bu, uygulamanın yayın görünümüdür;
+fiziksel monitörden görüntü veya bağlantı durumu alınmaz.
+
+### Otomatik testler ve son kontrol
 
 Otomatik API testleri her test için ayrı geçici veritabanı oluşturur; kendi kayıtlarına dokunmaz:
 
@@ -280,6 +345,18 @@ Elle denemek için panelden benzersiz numaralı bir deneme uçuşu ekle; sayfay�
 kaydın kaldığını gör. Kapısını düzenle, yeniden yenile, ardından deneme uçuşunu sil.
 Aynı numarayla ikinci uçuş eklemeyi ve düzenlerken **Vazgeç** düğmesini de dene.
 Gidiş/iç hat seçtiysen liste yayınını (`ekran.html?id=1`) yenileyerek sonucu görebilirsin.
+
+Son günün kontrolü:
+
+1. `baslat.bat` ve `frontend-baslat.bat` dosyalarını çalıştır; ana sayfayı aç.
+2. Bir kartın **Ekranı aç** bağlantısını ikinci sekmede aç.
+3. Ana sayfada aynı kartın yayınını değiştir; **Kaydedildi** mesajını bekle.
+4. Yayın sekmesine geç; yaklaşık 5 saniye içinde yeni içerik görünmeli.
+5. Ana sayfayı yenile; seçilen yayın korunmalı. Bir uçuşun kapısını değiştirip açık yayında güncellendiğini gör.
+6. Backend'i Ctrl+C ile durdur; yayında bağlantı uyarısı görünmeli. Yeniden başlatınca sayfayı yenilemeden düzelmeli.
+
+`veriGonder is not defined` gibi eski dosya hatalarında ana sayfayı `Ctrl+F5` ile yenile.
+JavaScript ve CSS adreslerinde sürüm parametresi bulunur; ilgili dosyalar değiştirildiğinde bu sürüm de artırılır.
 
 ---
 
@@ -294,23 +371,37 @@ Gidiş/iç hat seçtiysen liste yayınını (`ekran.html?id=1`) yenileyerek sonu
 | PUT | /flights/{ucus_id} | Uçuşun tüm alanlarını günceller |
 | DELETE | /flights/{ucus_id} | Uçuşu siler; gövdesiz 204 döndürür |
 | GET | /screens | Ekran listesini döndürür |
+| PATCH | /screens/{ekran_id} | `{ "yayinId": 5 }` ile kayıtlı yayını değiştirir |
 | GET | /pages | Yayın listesini döndürür |
+| PUT | /pages/{yayin_id} | Görsel veya tek uçuş yayınının içeriğini günceller |
+| POST | /images | Ham görsel dosyasını yükler ve `resimYolu` döndürür; 201 |
 
 ---
 
 ## Mimari
 
-<!-- Gün 14'te tamamlanacak.
-     Basit bir akış şeması yeterli:
-     Yayın ekranı + Panel → FastAPI → SQLite -->
+```text
+Ana sayfa (index.html) ── GET / POST / PUT / DELETE / PATCH ──┐
+                                                           ├─ FastAPI ─ SQLAlchemy ─ SQLite
+Yayın (ekran.html?id=1) ── periyodik GET ─────────────────────┘
+```
 
-_Geliştirme tamamlandığında eklenecek._
+`api.js` HTTP isteklerini ve hata yanıtlarını yönetir. `app.js` ekran atamalarını,
+`flights.js` uçuş formunu, `yayinlar.js` duyuru/tek uçuş içeriğini, `script.js` ise otomatik güncellenen yayını yönetir.
+Backend'de Pydantic girişleri doğrular; SQLAlchemy kayıtları okur ve değişiklikleri
+transaction içinde kalıcı kaydeder. SQLite foreign key kuralları ilişkileri korur.
 
 ---
 
 ## Ekran görüntüleri
 
-<!-- Gün 4'ten sonra yayın ekranının, Gün 5'ten sonra panelin görüntüsünü ekle -->
+Geçici test veritabanıyla alınmış örnek görünümler. Son başlık ve düğme düzenlemeleri nedeniyle küçük görsel farklılıklar olabilir:
+
+![Ana sayfa: uçuş yönetimi ve yayın atama](docs/images/ana-sayfa.png)
+
+![Otomatik güncellenen uçuş yayını](docs/images/yayin.png)
+
+![Ekran kartlarında canlı yayın önizlemeleri](docs/images/ekran-onizlemeleri.png)
 
 ---
 
@@ -318,11 +409,10 @@ _Geliştirme tamamlandığında eklenecek._
 
 Aşağıdaki konular bu projenin kapsamına **bilinçli olarak dahil edilmemiştir.** Amaç, sınırlı sürede temel konuları sağlam öğrenmektir.
 
-Çoklu havalimanı desteği · kullanıcıya yönelik arama ve filtre arayüzü · kullanıcı girişi (authentication) · gerçek monitör donanımı entegrasyonu · mobil öncelikli tasarım · makine öğrenmesi ve yapay zekâ özellikleri · uçuş gecikme tahmini · canlı uçak takibi · pist yönetimi · mikroservis mimarisi · Kubernetes ve karmaşık deployment yapıları
+Çoklu havalimanı desteği · serbest metinle uçuş arama · kullanıcı girişi (authentication) · gerçek monitör donanımı entegrasyonu · mobil öncelikli tasarım · makine öğrenmesi ve yapay zekâ özellikleri · uçuş gecikme tahmini · canlı uçak takibi · pist yönetimi · mikroservis mimarisi · Kubernetes ve karmaşık deployment yapıları
 
 **Ayrıca bilinçli olarak sadeleştirilenler:**
 
-- Panelde `iframe` ile canlı önizleme yerine bilgi kartları kullanılmaktadır
 - CSS'te animasyon ve geçiş efektleri kullanılmamaktadır
 
 ---
@@ -385,6 +475,14 @@ Yanıt uyumluluğunu, kayıt değişikliklerinin yeni isteklere yansımasını v
 Uçuş ekleme, düzenleme ve silme endpointlerini; panelde form, uçuş tablosu ve silme onayını ekledim.
 Girdi doğrulamasını, benzersiz uçuş numarasını, hata mesajlarını ve commit/rollback ile kalıcı kayıt işlemlerini öğrendim.
 Geçici veritabanında CRUD, bağlı yayınlar ve kilit hatasını test ettim; panelde girilen metinleri güvenli biçimde gösterdim.
+
+### Gün 14
+Ekrana yayın atamasını PATCH endpointiyle kalıcı kaydettim; açık yayınların uçuş ve atama değişikliklerini otomatik almasını sağladım.
+Bağlantı hatasında eski veri uyarısı, otomatik toparlanma, istek zaman aşımı ve güncel saat gösterimi ekledim.
+API ve iki sekmeli tarayıcı kontrollerini tamamladım; kurulum, mimari, kullanım ve ekran görüntülerini belgeledim.
+
+Ana sayfaya duyuru içeriği, görsel yükleme/önizleme ve tek uçuş seçimi ekledim.
+Yayın içeriklerinin kalıcı kaydını, hatalı girişleri ve açık ekranlara otomatik yansımasını test ettim.
 
 ---
 

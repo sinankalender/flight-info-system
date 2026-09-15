@@ -3,17 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flight Information System</title>
-    <link rel="stylesheet" href="css/panel.css?v=13.1">
+    <title>Havalimanı Uçuş Bilgi Sistemi</title>
+    <link rel="stylesheet" href="css/panel.css?v=14.4">
 </head>
 <body>
     <header>
-        <h1>Airport Flight Information System</h1>  
-        <time datetime=""></time>Saat: 15:35</b> 
+        <h1>Havalimanı Uçuş Bilgi Sistemi</h1>
+        <time id="saat"></time>
     </header>
     <main>
-        <section aria-labelledby="ucus-form-baslik">
-            <h2 id="ucus-form-baslik">Uçuş ekle</h2>
+        <section aria-labelledby="ucus-liste-baslik">
+            <div class="section-heading">
+                <h2 id="ucus-liste-baslik">Uçuşlar</h2>
+                <button id="ucus-yenile" type="button" class="secondary">Listeyi yenile</button>
+            </div>
+            <div class="ucus-filtreleri">
+                <label>Hat
+                    <select id="ucus-hat-filtre">
+                        <option value="domestic">İç hatlar</option>
+                        <option value="international">Dış hatlar</option>
+                    </select>
+                </label>
+                <label>Yön
+                    <select id="ucus-yon-filtre">
+                        <option value="departure">Gidiş</option>
+                        <option value="arrival">Geliş</option>
+                    </select>
+                </label>
+            </div>
+            <p id="ucus-grup-bilgisi" role="status"></p>
+            <details id="ucus-duzenleyici" class="duzenleyici">
+                <summary><span id="ucus-form-baslik">Yeni uçuş ekle</span></summary>
             <form id="ucus-form">
                 <fieldset id="ucus-form-alanlari">
                     <legend class="sr-only">Uçuş bilgileri</legend>
@@ -51,17 +71,12 @@
                     </div>
                     <div class="form-actions">
                         <button id="ucus-kaydet" type="submit">Uçuş ekle</button>
-                        <button id="ucus-vazgec" class="secondary" type="button" hidden>Vazgeç</button>
+                        <button id="ucus-vazgec" class="secondary" type="button">Vazgeç</button>
                     </div>
                 </fieldset>
             </form>
+            </details>
             <p id="ucus-islem-mesaji" role="status" hidden></p>
-        </section>
-        <section aria-labelledby="ucus-liste-baslik">
-            <div class="section-heading">
-                <h2 id="ucus-liste-baslik">Uçuşlar</h2>
-                <button id="ucus-yenile" type="button" class="secondary">Listeyi yenile</button>
-            </div>
             <p id="ucus-liste-mesaji" role="status">Uçuşlar yükleniyor...</p>
             <div class="table-scroll">
             <table>
@@ -70,8 +85,6 @@
                         <th>Havayolu</th>
                         <th>Uçuş No</th>
                         <th>Şehir</th>
-                        <th>Yön</th>
-                        <th>Hat</th>
                         <th>Planlanan Saat</th>
                         <th>Tahmini Saat</th>
                         <th>Kapı</th>
@@ -88,13 +101,30 @@
         </section>
 
 
-        <section id="screen-list">
-
+        <section aria-labelledby="yayin-icerik-baslik">
+            <div class="section-heading">
+                <h2 id="yayin-icerik-baslik">Duyuru ve uçuş bilgisi</h2>
+                <button id="yayin-icerik-yenile" type="button" class="secondary">Yayınları ve uçuşları yenile</button>
+            </div>
+            <p>Kaydettiğin içerik bu yayını kullanan bütün ekranlara yansır.</p>
+            <p id="yayin-icerik-mesaji" role="status"></p>
+            <div id="yayin-formlari"></div>
+        </section>
+        <section aria-labelledby="ekranlar-baslik">
+            <div class="section-heading">
+                <h2 id="ekranlar-baslik">Ekranlar ve yayınlar</h2>
+                <button id="ekran-yenile" type="button" class="secondary">Ekranları yenile</button>
+            </div>
+            <p>Yayın seçimin kaydedilir. Açık yayın ekranı değişikliği otomatik alır.</p>
+            <p id="ekran-liste-mesaji" role="status" hidden></p>
+            <div id="screen-list"></div>
         </section>
         
     </main>
-    <script src="api.js?v=13.1"></script>
-    <script src="app.js?v=13.1"></script>
-    <script src="flights.js?v=13.1"></script>
+    <script src="api.js?v=14.3"></script>
+    <script src="app.js?v=14.4"></script>
+    <script src="flights.js?v=14.3"></script>
+    <script src="yayinlar.js?v=14.3"></script>
+    <script src="saat.js?v=14.3"></script>
 </body>
 </html>

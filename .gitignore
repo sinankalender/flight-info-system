@@ -1,4 +1,5 @@
 .venv/
+frontend/images/uploads/
 __pycache__/
 *.pyc
 
